@@ -756,5 +756,11 @@
   "755": "Route must be a string",
   "756": "Route %s not found",
   "757": "Unknown styled string type: %s",
-  "758": "Missing workStore in useDynamicRouteParams"
+  "758": "Missing workStore in useDynamicRouteParams",
+  "759": "\\`%s\\` was called during a dynamic prerender. Next.js should be preventing %s from being included in server components statically, but did not in this case.",
+  "760": "createPrerenderSearchParamsForClientPage should not be called in a dynamic prerender.",
+  "761": "createParamsFromClient should not be called in a dynamic prerender.",
+  "762": "FetchStrategy.PPRDynamic should never be used when `experimental.clientSegmentCache` is disabled",
+  "763": "createSearchParamsFromClient should not be called in a dynamic prerender.",
+  "764": "A dynamic prerender store should not be used for a route handler."
 }

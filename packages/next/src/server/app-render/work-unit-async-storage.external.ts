@@ -82,6 +82,7 @@ export interface RequestStore extends CommonWorkUnitStore {
 export type PrerenderStoreModern =
   | PrerenderStoreModernClient
   | PrerenderStoreModernServer
+  | PrerenderStoreModernDynamic
 
 export interface PrerenderStoreModernClient extends PrerenderStoreModernCommon {
   readonly type: 'prerender-client'
@@ -89,6 +90,14 @@ export interface PrerenderStoreModernClient extends PrerenderStoreModernCommon {
 
 export interface PrerenderStoreModernServer extends PrerenderStoreModernCommon {
   readonly type: 'prerender'
+}
+
+export interface PrerenderStoreModernDynamic
+  extends PrerenderStoreModernCommon {
+  readonly type: 'prerender-dynamic'
+
+  readonly cookies: RequestStore['cookies']
+  readonly draftMode: RequestStore['draftMode']
 }
 
 export interface RevalidateStore {
@@ -282,6 +291,7 @@ export function getPrerenderResumeDataCache(
 ): PrerenderResumeDataCache | null {
   switch (workUnitStore.type) {
     case 'prerender':
+    case 'prerender-dynamic':
     case 'prerender-ppr':
       return workUnitStore.prerenderResumeDataCache
     case 'prerender-client':
@@ -306,6 +316,7 @@ export function getRenderResumeDataCache(
     case 'request':
       return workUnitStore.renderResumeDataCache
     case 'prerender':
+    case 'prerender-dynamic':
     case 'prerender-client':
       if (workUnitStore.renderResumeDataCache) {
         // If we are in a prerender, we might have a render resume data cache
@@ -336,10 +347,61 @@ export function getHmrRefreshHash(
       case 'cache':
       case 'private-cache':
       case 'prerender':
+      case 'prerender-dynamic':
         return workUnitStore.hmrRefreshHash
       case 'request':
         return workUnitStore.cookies.get(NEXT_HMR_REFRESH_HASH_COOKIE)?.value
       case 'prerender-client':
+      case 'prerender-ppr':
+      case 'prerender-legacy':
+      case 'unstable-cache':
+        break
+      default:
+        workUnitStore satisfies never
+    }
+  }
+
+  return undefined
+}
+
+export function isHmrRefresh(
+  workStore: WorkStore,
+  workUnitStore: WorkUnitStore
+): boolean {
+  if (workStore.dev) {
+    switch (workUnitStore.type) {
+      case 'cache':
+      case 'private-cache':
+      case 'request':
+        return workUnitStore.isHmrRefresh ?? false
+      case 'prerender':
+      case 'prerender-client':
+      case 'prerender-dynamic':
+      case 'prerender-ppr':
+      case 'prerender-legacy':
+      case 'unstable-cache':
+        break
+      default:
+        workUnitStore satisfies never
+    }
+  }
+
+  return false
+}
+
+export function getServerComponentsHmrCache(
+  workStore: WorkStore,
+  workUnitStore: WorkUnitStore
+): ServerComponentsHmrCache | undefined {
+  if (workStore.dev) {
+    switch (workUnitStore.type) {
+      case 'cache':
+      case 'private-cache':
+      case 'request':
+        return workUnitStore.serverComponentsHmrCache
+      case 'prerender':
+      case 'prerender-client':
+      case 'prerender-dynamic':
       case 'prerender-ppr':
       case 'prerender-legacy':
       case 'unstable-cache':
@@ -364,6 +426,7 @@ export function getDraftModeProviderForCacheScope(
       case 'cache':
       case 'private-cache':
       case 'unstable-cache':
+      case 'prerender-dynamic':
       case 'request':
         return workUnitStore.draftMode
       case 'prerender':
@@ -385,6 +448,7 @@ export function getCacheSignal(
   switch (workUnitStore.type) {
     case 'prerender':
     case 'prerender-client':
+    case 'prerender-dynamic':
       return workUnitStore.cacheSignal
     case 'prerender-ppr':
     case 'prerender-legacy':

@@ -17,6 +17,7 @@ import {
 } from './segment-cache'
 import { startTransition } from 'react'
 import { PrefetchKind } from './router-reducer/router-reducer-types'
+import { InvariantError } from '../../shared/lib/invariant-error'
 
 type LinkElement = HTMLAnchorElement | SVGAElement
 
@@ -377,6 +378,13 @@ function prefetchWithOldCacheImplementation(instance: PrefetchableInstance) {
       case FetchStrategy.Full: {
         prefetchKind = PrefetchKind.FULL
         break
+      }
+      case FetchStrategy.PPRDynamic: {
+        // We can only get here if Client Segment Cache is off, and in that case
+        // it shouldn't be possible for a link to request a dynamic prefetch.
+        throw new InvariantError(
+          'FetchStrategy.PPRDynamic should never be used when `experimental.clientSegmentCache` is disabled'
+        )
       }
       default: {
         instance.fetchStrategy satisfies never
