@@ -217,6 +217,7 @@ import {
   writeRouteTypesManifest,
 } from '../server/lib/router-utils/route-types-utils'
 import { isParallelRouteSegment } from '../shared/lib/segment'
+import { ensureLeadingSlash } from '../shared/lib/page-path/ensure-leading-slash'
 
 type Fallback = null | boolean | string
 
@@ -1325,7 +1326,7 @@ export default async function build(
             if (isReservedPage(route)) continue
 
             pageRoutes.push({
-              route,
+              route: normalizePathSep(route),
               filePath: filePath.replace(/^private-next-pages\//, 'pages/'),
             })
           }
@@ -1361,7 +1362,7 @@ export default async function build(
               }
 
               appRoutes.push({
-                route: normalizeAppPath(route),
+                route: normalizeAppPath(normalizePathSep(route)),
                 filePath: filePath.replace(/^private-next-app-dir\//, 'app/'),
               })
             }
@@ -1371,7 +1372,12 @@ export default async function build(
           if (appDir && mappedAppLayouts) {
             for (const [route, filePath] of Object.entries(mappedAppLayouts)) {
               layoutRoutes.push({
-                route: normalizeAppPath(route),
+                route: ensureLeadingSlash(
+                  normalizeAppPath(normalizePathSep(route)).replace(
+                    /\/layout$/,
+                    ''
+                  )
+                ),
                 filePath: filePath.replace(/^private-next-app-dir\//, 'app/'),
               })
             }
